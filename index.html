@@ -9,36 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        
-        /* Custom scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-
-        /* Message animations */
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(15px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .message-anim { animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        /* Typing indicator bounce */
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         .typing-dot { animation: bounce 0.6s infinite ease-in-out; }
         .typing-dot:nth-child(2) { animation-delay: 0.15s; }
         .typing-dot:nth-child(3) { animation-delay: 0.3s; }
-
-        /* Typography improvements */
         .prose-content p { margin-bottom: 0.5rem; line-height: 1.6; }
         .prose-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
         .prose-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
         .prose-content strong { font-weight: 600; color: #1f2937; }
-        
-        /* Glass effect for user bubbles */
         .user-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
     </style>
 </head>
@@ -63,8 +47,8 @@
                     </p>
                 </div>
             </div>
-            <button onclick="clearChat()" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition duration-200" title="Clear Conversation">
-                <i class="fa-regular fa-trash-can"></i>
+            <button onclick="clearChat()" class="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition duration-200" title="Clear Chat">
+                <i class="fa-solid fa-trash-can"></i>
             </button>
         </div>
 
@@ -76,13 +60,13 @@
                     <i class="fa-solid fa-robot text-indigo-600 text-xs"></i>
                 </div>
                 <div class="bg-white text-gray-700 rounded-2xl rounded-tl-none py-3.5 px-5 shadow-sm border border-gray-100 max-w-[85%]">
-                    <p class="text-sm leading-relaxed">Hello! How can I support you today?</p>
-                    <span class="text-[10px] text-gray-400 mt-2 block font-medium">Just now</span>
+                    <p class="text-sm leading-relaxed">Hello! How can I help you today?</p>
+                    <span class="text-[10px] text-gray-400 mt-2 block font-medium">System</span>
                 </div>
             </div>
         </div>
 
-        <!-- Typing Indicator Overlay -->
+        <!-- Typing Indicator -->
         <div id="typing-indicator" class="hidden absolute bottom-[88px] left-6 z-10">
             <div class="bg-white border border-gray-100 px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-3">
                 <span class="text-xs text-gray-500 font-medium">Thinking</span>
@@ -112,7 +96,7 @@
                     <i class="fa-solid fa-paper-plane text-sm"></i>
                 </button>
             </form>
-            <p class="text-center text-[10px] text-gray-400 mt-3">AI may display inaccurate info. Please verify important facts.</p>
+            <p class="text-center text-[10px] text-gray-400 mt-3">Powered by Google Gemini</p>
         </div>
     </div>
 
@@ -122,35 +106,38 @@
         const typingIndicator = document.getElementById('typing-indicator');
         const sendBtn = document.getElementById('send-btn');
         
-        // The execution environment will provide the key automatically.
-        // If running locally, paste your key inside the quotes.
-        const apiKey = ""; 
+        // -------------------------------------------------------------
+        // API KEY CONFIGURATION
+        // -------------------------------------------------------------
+        const hardcodedKey = "AIzaSyDzuYQRbw_8aelEmMQuVnf2v1kNZOQdfvg"; 
+        let apiKey = hardcodedKey || localStorage.getItem("shire_api_key") || ""; 
+        // -------------------------------------------------------------
 
         const SYSTEM_PROMPT = "You are a versatile, empathetic, and professional AI assistant. Your capabilities include: 1. Personal Support: If a user shares personal problems or feelings, be supportive, kind, and non-judgmental. Offer constructive advice or simply listen. 2. Information Retrieval: You have access to Google Search. Use it for current events, facts, and data. 3. General Tasks: You can write, code, and explain concepts. Adapt your tone to the user's request. Keep responses concise and easy to read.";
 
         async function handleUserSubmit(e) {
             e.preventDefault();
-            const text = userInput.value;
-            if (!text.trim()) return;
+            const text = userInput.value.trim();
+            if (!text) return;
 
-            // 1. Add User Message
+            // NORMAL CHAT FLOW
             addMessage(text, 'user');
             userInput.value = '';
             
-            // Disable input while loading
             userInput.disabled = true;
             sendBtn.disabled = true;
-
-            // 2. Show Typing Indicator
             showTyping();
 
-            // 3. Call Gemini API
             try {
                 const result = await callGeminiAPI(text);
                 addMessage(result.text, 'bot', result.sources);
             } catch (error) {
                 console.error("API Error:", error);
-                addMessage(`I apologize, but I encountered an error. (${error.message})`, 'bot');
+                if (error.message.includes("Invalid API Key")) {
+                    addMessage("⚠️ The API Key is invalid. Please check the code.", 'bot');
+                } else {
+                    addMessage(`Error: ${error.message}. Please try again.`, 'bot');
+                }
             } finally {
                 hideTyping();
                 userInput.disabled = false;
@@ -168,62 +155,30 @@
                 tools: [{ google_search: {} }] 
             };
 
-            const maxRetries = 3;
-            let retryCount = 0;
-            let delay = 1000;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-            while (retryCount <= maxRetries) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        // Don't retry if it's a Bad Request (likely Key issue) or Forbidden
-                        if (response.status === 400 || response.status === 403) {
-                            throw new Error("Invalid API Key or Permissions");
-                        }
-                        if (response.status === 429) { 
-                            throw new Error("Rate limit exceeded");
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    
-                    const candidate = data.candidates?.[0];
-                    const botText = candidate?.content?.parts?.[0]?.text;
-                    
-                    const sources = candidate?.groundingMetadata?.groundingAttributions?.map(a => ({
-                        uri: a.web?.uri,
-                        title: a.web?.title || "Source"
-                    })).filter(s => s.uri) || [];
-
-                    if (botText) {
-                        return { text: formatResponse(botText), sources: sources };
-                    } else {
-                        return { text: "I received an empty response. Please try again." };
-                    }
-
-                } catch (error) {
-                    // Stop retrying if it's an API Key issue
-                    if (error.message.includes("Invalid API Key")) throw error;
-
-                    retryCount++;
-                    if (retryCount > maxRetries) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; 
-                }
+            if (!response.ok) {
+                if (response.status === 400 || response.status === 403) throw new Error("Invalid API Key");
+                throw new Error(`HTTP Error ${response.status}`);
             }
+
+            const data = await response.json();
+            const candidate = data.candidates?.[0];
+            const botText = candidate?.content?.parts?.[0]?.text;
+            const sources = candidate?.groundingMetadata?.groundingAttributions?.map(a => ({
+                uri: a.web?.uri,
+                title: a.web?.title || "Source"
+            })).filter(s => s.uri) || [];
+
+            return { text: formatResponse(botText), sources: sources };
         }
 
         function formatResponse(text) {
-            let formatted = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-                .replace(/\n/g, '<br>'); 
-            return formatted;
+            return text ? text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') : "I'm speechless!";
         }
 
         function addMessage(text, sender, sources = []) {
@@ -231,7 +186,6 @@
             const isUser = sender === 'user';
             
             div.className = `flex gap-4 message-anim ${isUser ? 'flex-row-reverse' : ''}`;
-            
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const iconHtml = isUser 
@@ -244,57 +198,36 @@
                     <div class="mt-3 pt-3 border-t border-gray-100/80">
                         <p class="text-[10px] text-gray-400 font-semibold mb-2 uppercase tracking-wide">References</p>
                         <div class="flex flex-wrap gap-2">
-                            ${sources.map(s => `
-                                <a href="${s.uri}" target="_blank" class="text-[11px] bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition flex items-center gap-1.5 max-w-full shadow-sm">
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i> <span class="truncate max-w-[120px]">${s.title}</span>
-                                </a>
-                            `).join('')}
+                            ${sources.map(s => `<a href="${s.uri}" target="_blank" class="text-[11px] bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i> <span class="truncate max-w-[120px]">${s.title}</span></a>`).join('')}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
-
-            const bubbleClass = isUser 
-                ? 'user-gradient text-white rounded-2xl rounded-tr-none shadow-md shadow-indigo-200/50' 
-                : 'bg-white text-gray-700 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm';
-
-            const textClass = isUser ? 'text-white' : 'text-gray-700';
 
             div.innerHTML = `
                 ${iconHtml}
-                <div class="${bubbleClass} py-3.5 px-5 max-w-[85%] prose-content relative group">
-                    <div class="text-sm leading-relaxed ${textClass}">${text}</div>
+                <div class="${isUser ? 'user-gradient text-white rounded-tr-none' : 'bg-white text-gray-700 rounded-tl-none border border-gray-100'} rounded-2xl py-3.5 px-5 max-w-[85%] prose-content relative shadow-sm">
+                    <div class="text-sm leading-relaxed ${isUser ? 'text-white' : 'text-gray-700'}">${text}</div>
                     ${!isUser ? sourcesHtml : ''}
                     <span class="text-[10px] ${isUser ? 'text-indigo-100/70' : 'text-gray-400'} mt-1.5 block font-medium text-right">${time}</span>
-                </div>
-            `;
+                </div>`;
             
             chatBox.appendChild(div);
-            
-            setTimeout(() => {
-                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-            }, 100);
+            setTimeout(() => chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }), 100);
         }
 
-        function showTyping() {
-            typingIndicator.classList.remove('hidden');
-            setTimeout(() => { chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }); }, 100);
-        }
-
-        function hideTyping() {
-            typingIndicator.classList.add('hidden');
-        }
-
+        function showTyping() { typingIndicator.classList.remove('hidden'); setTimeout(() => chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }), 100); }
+        function hideTyping() { typingIndicator.classList.add('hidden'); }
+        
         function clearChat() {
-            if(confirm("Start a new conversation?")) {
+            if(confirm("Clear conversation?")) {
                 chatBox.innerHTML = `
                 <div class="flex gap-4 message-anim">
                     <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
                         <i class="fa-solid fa-robot text-indigo-600 text-xs"></i>
                     </div>
                     <div class="bg-white text-gray-700 rounded-2xl rounded-tl-none py-3.5 px-5 shadow-sm border border-gray-100 max-w-[85%]">
-                        <p class="text-sm leading-relaxed">Conversation cleared. I'm ready for a fresh start!</p>
-                        <span class="text-[10px] text-gray-400 mt-2 block font-medium">Just now</span>
+                        <p class="text-sm leading-relaxed">Conversation cleared.</p>
+                        <span class="text-[10px] text-gray-400 mt-2 block font-medium">System</span>
                     </div>
                 </div>`;
             }
