@@ -8,42 +8,27 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         
         /* Custom scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.05);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(0,0,0,0.2);
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
         /* Message animations */
         @keyframes slideInUp {
             from { opacity: 0; transform: translateY(15px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .message-anim {
-            animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        .message-anim { animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         /* Typing indicator bounce */
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-4px); }
         }
-        .typing-dot {
-            animation: bounce 0.6s infinite ease-in-out;
-        }
+        .typing-dot { animation: bounce 0.6s infinite ease-in-out; }
         .typing-dot:nth-child(2) { animation-delay: 0.15s; }
         .typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
@@ -54,9 +39,7 @@
         .prose-content strong { font-weight: 600; color: #1f2937; }
         
         /* Glass effect for user bubbles */
-        .user-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-        }
+        .user-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
     </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 h-screen flex items-center justify-center p-4">
@@ -68,7 +51,6 @@
         <div class="bg-white border-b border-gray-100 p-5 flex items-center justify-between shadow-sm z-20">
             <div class="flex items-center gap-4">
                 <div class="relative">
-                    <!-- Changed from Icon to Image -->
                     <img src="https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Aneka&backgroundColor=6366f1" 
                          alt="AI Avatar" 
                          class="w-12 h-12 rounded-2xl shadow-lg shadow-indigo-200 hover:scale-105 transition-transform duration-300">
@@ -140,10 +122,10 @@
         const typingIndicator = document.getElementById('typing-indicator');
         const sendBtn = document.getElementById('send-btn');
         
-        // This is automatically injected by the environment
+        // The execution environment will provide the key automatically.
+        // If running locally, paste your key inside the quotes.
         const apiKey = ""; 
 
-        // System Prompt
         const SYSTEM_PROMPT = "You are a versatile, empathetic, and professional AI assistant. Your capabilities include: 1. Personal Support: If a user shares personal problems or feelings, be supportive, kind, and non-judgmental. Offer constructive advice or simply listen. 2. Information Retrieval: You have access to Google Search. Use it for current events, facts, and data. 3. General Tasks: You can write, code, and explain concepts. Adapt your tone to the user's request. Keep responses concise and easy to read.";
 
         async function handleUserSubmit(e) {
@@ -168,7 +150,7 @@
                 addMessage(result.text, 'bot', result.sources);
             } catch (error) {
                 console.error("API Error:", error);
-                addMessage("I apologize, but I'm having trouble connecting to the internet right now. Please try again later.", 'bot');
+                addMessage(`I apologize, but I encountered an error. (${error.message})`, 'bot');
             } finally {
                 hideTyping();
                 userInput.disabled = false;
@@ -178,7 +160,7 @@
         }
 
         async function callGeminiAPI(userQuery) {
-            const url = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey};
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -186,7 +168,7 @@
                 tools: [{ google_search: {} }] 
             };
 
-            const maxRetries = 5;
+            const maxRetries = 3;
             let retryCount = 0;
             let delay = 1000;
 
@@ -199,10 +181,14 @@
                     });
 
                     if (!response.ok) {
-                         if (response.status === 429) { 
-                             throw new Error("Rate limit exceeded");
-                         }
-                         throw new Error(HTTP error! status: ${response.status});
+                        // Don't retry if it's a Bad Request (likely Key issue) or Forbidden
+                        if (response.status === 400 || response.status === 403) {
+                            throw new Error("Invalid API Key or Permissions");
+                        }
+                        if (response.status === 429) { 
+                            throw new Error("Rate limit exceeded");
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
                     const data = await response.json();
@@ -222,6 +208,9 @@
                     }
 
                 } catch (error) {
+                    // Stop retrying if it's an API Key issue
+                    if (error.message.includes("Invalid API Key")) throw error;
+
                     retryCount++;
                     if (retryCount > maxRetries) throw error;
                     await new Promise(resolve => setTimeout(resolve, delay));
@@ -232,7 +221,7 @@
 
         function formatResponse(text) {
             let formatted = text
-                .replace(/\\(.?)\\*/g, '<strong>$1</strong>') 
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
                 .replace(/\n/g, '<br>'); 
             return formatted;
         }
@@ -241,16 +230,14 @@
             const div = document.createElement('div');
             const isUser = sender === 'user';
             
-            div.className = flex gap-4 message-anim ${isUser ? 'flex-row-reverse' : ''};
+            div.className = `flex gap-4 message-anim ${isUser ? 'flex-row-reverse' : ''}`;
             
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // User Icon vs Bot Icon
             const iconHtml = isUser 
-                ? <div class="w-8 h-8 rounded-full user-gradient flex items-center justify-center flex-shrink-0 mt-1 shadow-md text-white"><i class="fa-regular fa-user text-xs"></i></div>
-                : <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1"><i class="fa-solid fa-robot text-indigo-600 text-xs"></i></div>;
+                ? `<div class="w-8 h-8 rounded-full user-gradient flex items-center justify-center flex-shrink-0 mt-1 shadow-md text-white"><i class="fa-regular fa-user text-xs"></i></div>`
+                : `<div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1"><i class="fa-solid fa-robot text-indigo-600 text-xs"></i></div>`;
 
-            // Sources HTML
             let sourcesHtml = '';
             if (sources && sources.length > 0) {
                 sourcesHtml = `
@@ -267,16 +254,11 @@
                 `;
             }
 
-            // Message Bubble Styling
             const bubbleClass = isUser 
                 ? 'user-gradient text-white rounded-2xl rounded-tr-none shadow-md shadow-indigo-200/50' 
                 : 'bg-white text-gray-700 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm';
 
             const textClass = isUser ? 'text-white' : 'text-gray-700';
-            const linkClass = isUser ? 'text-indigo-100 underline' : 'text-indigo-600 hover:underline';
-
-            // We need to inject the specific class into the content for links if we had them, 
-            // but for now we stick to the main text color.
 
             div.innerHTML = `
                 ${iconHtml}
@@ -288,26 +270,19 @@
             `;
             
             chatBox.appendChild(div);
-            scrollToBottom();
+            
+            setTimeout(() => {
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+            }, 100);
         }
 
         function showTyping() {
             typingIndicator.classList.remove('hidden');
-            scrollToBottom();
+            setTimeout(() => { chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' }); }, 100);
         }
 
         function hideTyping() {
             typingIndicator.classList.add('hidden');
-        }
-
-        function scrollToBottom() {
-            // Smooth scroll to bottom
-            setTimeout(() => {
-                chatBox.scrollTo({
-                    top: chatBox.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, 100);
         }
 
         function clearChat() {
