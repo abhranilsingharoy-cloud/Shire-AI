@@ -6,37 +6,37 @@ This document serves as a technical overview of Shire AI, a single-page hypermed
 
 # ✨ Functional Specifications
 
-Real-Time Data Acquisition: To mitigate the temporal limitations often inherent in static artificial intelligence models, the system interfaces directly with Google Search. This capability allows for the retrieval of contemporaneous data, encompassing breaking news, meteorological conditions, and financial market metrics.
+• Real-Time Data Acquisition: To mitigate the temporal limitations often inherent in static artificial intelligence models, the system interfaces directly with Google Search. This capability allows for the retrieval of contemporaneous data, encompassing breaking news, meteorological conditions, and financial market metrics.
 
-Autonomous Citation Generation: To ensure the veracity of provided information, the application autonomously generates citations for factual assertions. This feature enhances transparency and allows users to verify the provenance of the data presented.
+• Autonomous Citation Generation: To ensure the veracity of provided information, the application autonomously generates citations for factual assertions. This feature enhances transparency and allows users to verify the provenance of the data presented.
 
-Adaptive Sentiment Response: The underlying algorithm is programmed to detect linguistic markers of user distress. Upon detection, the system dynamically transitions to a supportive, non-judgmental communication style tailored to sensitive personal discussions.
+• Adaptive Sentiment Response: The underlying algorithm is programmed to detect linguistic markers of user distress. Upon detection, the system dynamically transitions to a supportive, non-judgmental communication style tailored to sensitive personal discussions.
 
-Modern Interface Architecture: The user interface employs a "glassmorphism" design aesthetic, utilizing the Tailwind CSS framework to ensure fluid animations and a responsive layout across various devices.
+• Modern Interface Architecture: The user interface employs a "glassmorphism" design aesthetic, utilizing the Tailwind CSS framework to ensure fluid animations and a responsive layout across various devices.
 
-Client-Side Execution: The application architecture is fully self-contained within the browser, eliminating the requirement for supplementary backend server infrastructure.
+• Client-Side Execution: The application architecture is fully self-contained within the browser, eliminating the requirement for supplementary backend server infrastructure.
 
 # 🚀 Operational Procedures
 
 The deployment of Shire AI does not require the installation of external runtime environments such as Node.js or Python. To initiate the system, the following protocol should be observed:
 
-Acquisition: Download the index.html file to a designated local directory.
+1. Acquisition: Download the index.html file to a designated local directory.
 
-Execution: Launch the application by opening the file within a standard web browser (e.g., Google Chrome, Microsoft Edge, or Safari).
+2. Execution: Launch the application by opening the file within a standard web browser (e.g., Google Chrome, Microsoft Edge, or Safari).
 
-Interaction: Engagement with the conversational interface may commence immediately upon load.
+3. Interaction: Engagement with the conversational interface may commence immediately upon load.
 
 
 # 🛠️ Technical Architecture
 
-Frontend Framework: HTML5, Vanilla JavaScript
+• Frontend Framework: HTML5, Vanilla JavaScript
 
-Styling System: Tailwind CSS (via Content Delivery Network)
+• Styling System: Tailwind CSS (via Content Delivery Network)
 
-Inference Engine: Google Gemini 2.5 Flash
+• Inference Engine: Google Gemini 2.5 Flash
 
-Data Grounding: Google Search Grounding Instrument
+• Data Grounding: Google Search Grounding Instrument
 
-Iconography: FontAwesome
+• Iconography: FontAwesome
 
            Made by Abhranil Singha Roy.
