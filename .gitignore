@@ -1,0 +1,15 @@
+specific to macOS
+
+.DS_Store
+
+specific to Windows
+
+Thumbs.db
+
+specific to VS Code (optional settings)
+
+.vscode/
+
+Logs
+
+*.log
